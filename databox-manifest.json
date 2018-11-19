@@ -21,8 +21,11 @@
 	"external-whitelist": [
 		{
 			"urls": [
-				"https://www.instagram.com"
+				"https://www.instagram.com",
+				"https://i.instagram.com",
+				"https://scontent-lhr3-1.cdninstagram.com"
 			]
+
 		}
 	],
 	"resource-requirements": {

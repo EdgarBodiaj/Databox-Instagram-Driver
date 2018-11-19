@@ -2,11 +2,13 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 	"time"
 
@@ -23,6 +25,38 @@ var (
 	isRun       = false
 	success     = true
 )
+
+type IMAGE struct {
+	StoreID string
+	Size    DIMEN    `json:"dimensions"`
+	DispURL string   `json:"display_url"`
+	ImgID   string   `json:"id"`
+	IsVid   bool     `json:"is_video"`
+	Tags    []string `json:"tags"`
+	TakenAt int64    `json:"taken_at_timestamp"`
+	LIKE    struct {
+		LikeCount int `json:"count"`
+	} `json:"edge_media_preview_like"`
+	CAPTION struct {
+		Edges []EDGES `json:"edges"`
+	} `json:"edge_media_to_caption"`
+	COMMENT struct {
+		CommentCount int `json:"count"`
+	} `json:"edge_media_to_comment"`
+}
+
+type DIMEN struct {
+	Width  int `json:"width"`
+	Height int `json:"height"`
+}
+
+type EDGES struct {
+	Node NODES `json:"node"`
+}
+
+type NODES struct {
+	Text string `json:"text"`
+}
 
 func main() {
 	DataboxTestMode := os.Getenv("DATABOX_VERSION") == ""
@@ -69,12 +103,12 @@ func registerData(testMode bool) {
 	libDatabox.Info("Registered Credential Datasource")
 	//Setup datastore for main data
 	testDatasource := libDatabox.DataSourceMetadata{
-		Description:    "Instagram  data",          //required
+		Description:    "Instagram data",           //required
 		ContentType:    libDatabox.ContentTypeJSON, //required
 		Vendor:         "databox-test",             //required
 		DataSourceType: "photoData",                //required
-		DataSourceID:   "InstagramData",            //required
-		StoreType:      libDatabox.StoreTypeTSBlob, //required
+		DataSourceID:   "InstagramDatastore",       //required
+		StoreType:      libDatabox.StoreTypeKV,     //required
 		IsActuator:     false,
 		IsFunc:         false,
 	}
@@ -209,7 +243,6 @@ func doDriverWork() {
 		fmt.Println(uErr.Error())
 		return
 	}
-
 	tempPas, pErr := storeClient.KVText.Read("InstagramCred", "password")
 	if pErr != nil {
 		fmt.Println(pErr.Error())
@@ -223,18 +256,19 @@ func doDriverWork() {
 		"--latest",
 		"-d",
 		"/home/databox"}
-
-	cmdRun := exec.Command(cmdName, cmdArgs[0], cmdArgs[1], cmdArgs[2], cmdArgs[3], cmdArgs[4], cmdArgs[5], cmdArgs[6], cmdArgs[7], cmdArgs[8])
-	cmdRun.Dir = "/home/databox"
-
-	cmdCat := exec.Command("cat", "bodiaj.json")
-	cmdCat.Dir = "/home/databox"
 	//Create recent store, error object and output
 	var (
+		img     []IMAGE
 		er, err error
 		cmdOut  []byte
 	)
 	for {
+		cmdRun := exec.Command(cmdName, cmdArgs[0], cmdArgs[1], cmdArgs[2], cmdArgs[3], cmdArgs[4], cmdArgs[5], cmdArgs[6], cmdArgs[7], cmdArgs[8])
+		cmdRun.Dir = "/home/databox"
+
+		cmdCat := exec.Command("cat", "bodiaj.json")
+		cmdCat.Dir = "/home/databox"
+
 		//Create new var for incoming data
 		er = cmdRun.Run()
 		if er != nil {
@@ -249,11 +283,36 @@ func doDriverWork() {
 			return
 		}
 
-		aerr := storeClient.TSBlobJSON.Write("InstagramData", cmdOut)
+		aerr := storeClient.KVJSON.Write("InstagramDatastore", "meta", cmdOut)
 		if aerr != nil {
 			libDatabox.Err("Error Write Datasource " + aerr.Error())
 		}
-		libDatabox.Info("Data written to store: " + string(cmdOut))
+		libDatabox.Info("Storing metadata")
+
+		err := json.Unmarshal(cmdOut, &img)
+		if err != nil {
+			libDatabox.Err("Error Unmarshal data " + err.Error())
+		}
+
+		for i := 0; i < len(img); i++ {
+			pat := regexp.MustCompile(`(.{8}\_.*\_.*n.jpg)`)
+			s := pat.FindStringSubmatch(img[i].DispURL)
+			img[i].StoreID = s[1]
+
+			store, err := json.Marshal(img[i])
+			if err != nil {
+				libDatabox.Err("Error Marshaling data " + err.Error())
+			}
+
+			key := img[i].StoreID
+
+			aerr := storeClient.KVJSON.Write("InstagramDatastore", key, store)
+			if aerr != nil {
+				libDatabox.Err("Error Write Datasource " + aerr.Error())
+			}
+		}
+
+		//libDatabox.Info("Data written to store: " + string(cmdOut))
 		libDatabox.Info("Storing data")
 
 		time.Sleep(time.Second * 30)
