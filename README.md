@@ -17,7 +17,7 @@ The credential store ID is: ***InstagramCred***
 
 The image datastore is a key-value store **(KVStore)** which contains the metadata json of all the stored images inside the store, along with individual JSON objects of each image. The content that is stored inside the store is in JSON format **(ContentTypeJSON)**
 
-The metadata that is stored can be accessed with the key: ***metadata***
+The metadata that is stored can be accessed with the key: ***meta***
 
 The image datastore ID is: ***InstagramDatastore***
 
