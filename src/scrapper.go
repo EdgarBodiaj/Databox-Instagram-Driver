@@ -26,6 +26,7 @@ var (
 	success     = true
 )
 
+//IMAGE struct defines the data kept for each image
 type IMAGE struct {
 	StoreID string
 	Size    DIMEN    `json:"dimensions"`
@@ -45,6 +46,7 @@ type IMAGE struct {
 	} `json:"edge_media_to_comment"`
 }
 
+//DIMEN struct holds the dimension of the image
 type DIMEN struct {
 	Width  int `json:"width"`
 	Height int `json:"height"`
@@ -131,17 +133,24 @@ func infoSaved(w http.ResponseWriter, r *http.Request) {
 	if tempPas != nil {
 		libDatabox.Info("Saved auth detected")
 		fmt.Fprintf(w, "<h1>Saved authentication detected<h1>")
-		channel := make(chan bool)
 
-		go infoCheck(channel)
-		if <-channel {
-			go doDriverWork()
-			fmt.Fprintf(w, "<h1>Good auth<h1>")
-		} else {
-			fmt.Fprintf(w, "<h1>Bad auth<h1>")
+		if isRun {
+			fmt.Fprintf(w, "<h1>Already running<h1>")
+			libDatabox.Info("Already running")
 			fmt.Fprintf(w, " <button onclick='goBack()'>Go Back</button><script>function goBack() {	window.history.back();}</script> ")
-		}
+		} else {
+			channel := make(chan bool)
 
+			go infoCheck(channel)
+			if <-channel {
+				go doDriverWork()
+				fmt.Fprintf(w, "<h1>Good auth<h1>")
+			} else {
+				fmt.Fprintf(w, "<h1>Bad auth<h1>")
+				fmt.Fprintf(w, " <button onclick='goBack()'>Go Back</button><script>function goBack() {	window.history.back();}</script> ")
+			}
+
+		}
 	} else {
 		fmt.Fprintf(w, "<h1>No saved auth detected<h1>")
 		fmt.Fprintf(w, " <button onclick='goBack()'>Go Back</button><script>function goBack() {	window.history.back();}</script> ")
@@ -256,6 +265,8 @@ func doDriverWork() {
 		"--latest",
 		"-d",
 		"/home/databox"}
+
+	fileName := string(tempUse) + ".json"
 	//Create recent store, error object and output
 	var (
 		img     []IMAGE
@@ -266,7 +277,7 @@ func doDriverWork() {
 		cmdRun := exec.Command(cmdName, cmdArgs[0], cmdArgs[1], cmdArgs[2], cmdArgs[3], cmdArgs[4], cmdArgs[5], cmdArgs[6], cmdArgs[7], cmdArgs[8])
 		cmdRun.Dir = "/home/databox"
 
-		cmdCat := exec.Command("cat", "bodiaj.json")
+		cmdCat := exec.Command("cat", fileName)
 		cmdCat.Dir = "/home/databox"
 
 		//Create new var for incoming data
