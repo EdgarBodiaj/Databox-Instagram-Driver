@@ -32,10 +32,11 @@ var (
 	BasePath             string
 	Host                 string
 	StopDoDriverWork     chan struct{}
+	DataboxTestMode      bool
 )
 
 func main() {
-	DataboxTestMode := os.Getenv("DATABOX_VERSION") == ""
+	DataboxTestMode = os.Getenv("DATABOX_VERSION") == ""
 
 	if DataboxTestMode {
 		Host = HostOutsideDatabox

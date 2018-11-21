@@ -16,6 +16,12 @@ func index(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	callbackUrl := r.FormValue("post_auth_callback")
+	PostAuthCallbackUrl := "/core-ui/ui/view/" + BasePath + "/info"
+	if callbackUrl != "" {
+		PostAuthCallbackUrl = callbackUrl
+	}
+
 	body := `<!doctype html>
 	<head>
 	  <meta charset="utf-8">
@@ -31,14 +37,15 @@ func index(w http.ResponseWriter, r *http.Request) {
 
 	<body>
 	  	<div class="form-login">
-        <img class="logo" src="` + BasePath + `/ui/img/Instagram_logo.svg" />
-        <p>Sign in with your instagram account to download your photos.</p>
-		<form action="` + BasePath + `/ui/auth" method="post">
-		<div class="row"> <label for="username">Username </label><input type="text" name="username" required></div>
-		<div class="row"> <label for="password">Password </label><input type="password" name="password" required></div>
-		<div class="row"> <input type="submit" class="btn-login" value="Sign in"></div>
+			<img class="logo" src="` + BasePath + `/ui/img/Instagram_logo.svg" />
+			<p>Sign in with your instagram account to download your photos.</p>
+			<form action="` + BasePath + `/ui/auth" method="post">
+				<div class="row"> <label for="username">Username </label><input autocomplete="off" type="text" name="username" required></div>
+				<div class="row"> <label for="password">Password </label><input autocomplete="off" type="password" name="password" required></div>
+				<div class="row"> <input type="submit" class="btn-login" value="Sign in"></div>
+				<input style="display: none" type="text" name="post_auth_callback" value="` + PostAuthCallbackUrl + `"/>
+			</form>
 		</div>
-	  </form>
 	</body>
 	</html>`
 
@@ -137,7 +144,19 @@ func login(w http.ResponseWriter, r *http.Request) {
 			StopDoDriverWork = make(chan struct{})
 			go doDriverWork(StopDoDriverWork)
 		}
-		http.Redirect(w, r, Host+"/ui/info", 302)
+
+		callbackUrl := r.FormValue("post_auth_callback")
+		PostAuthCallbackUrl := "/core-ui/ui/view/" + BasePath + "/info"
+		if callbackUrl != "" {
+			PostAuthCallbackUrl = callbackUrl
+		}
+
+		if DataboxTestMode {
+			fmt.Fprintf(w, "<html><head><script>window.location = '%s';</script><head><body><body></html>", PostAuthCallbackUrl)
+		} else {
+			fmt.Fprintf(w, "<html><head><script>window.parent.location = '%s';</script><head><body><body></html>", PostAuthCallbackUrl)
+		}
+
 	} else {
 		userAuthenticated = false
 		fmt.Fprintf(w, "<h1>Bad auth<h1>")
