@@ -18,6 +18,9 @@ func index(w http.ResponseWriter, r *http.Request) {
 
 	callbackUrl := r.FormValue("post_auth_callback")
 	PostAuthCallbackUrl := "/core-ui/ui/view/" + BasePath + "/info"
+	if DataboxTestMode {
+		PostAuthCallbackUrl = "/ui/info"
+	}
 	if callbackUrl != "" {
 		PostAuthCallbackUrl = callbackUrl
 	}

@@ -105,7 +105,7 @@ func registerData() {
 		Description:    "Instagram data",           //required
 		ContentType:    libDatabox.ContentTypeJSON, //required
 		Vendor:         "databox-test",             //required
-		DataSourceType: "photoData",                //required
+		DataSourceType: "instagram::photoData",                //required
 		DataSourceID:   "InstagramDatastore",       //required
 		StoreType:      libDatabox.StoreTypeKV,     //required
 		IsActuator:     false,
