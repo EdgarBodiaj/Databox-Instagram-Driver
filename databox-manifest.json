@@ -30,13 +30,6 @@
 	],
 	"resource-requirements": {
 		"store": "core-store"
-	},
-	"provides": [
-		{
-			"data-source-type": "instagram::photoData",
-			"description": "Instagram photo metadata",
-			"store-type": "TSBLOB",
-			"schema": {}
-		}
-	]
+	}
+
 }

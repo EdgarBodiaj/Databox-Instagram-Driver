@@ -7,7 +7,7 @@ all: build-amd64 build-arm64v8 publish-images
 
 .PHONY: start
 start:
-	go run ./src/*.go
+	go run ./src/ytHist.go
 
 .PHONY: build-amd64
 build-amd64:
