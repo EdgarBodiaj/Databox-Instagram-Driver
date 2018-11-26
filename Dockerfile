@@ -4,6 +4,9 @@ RUN apk update && apk add build-base go git libzmq zeromq-dev alpine-sdk libsodi
 RUN apk add 'go>=1.11-r0' --update-cache --repository http://nl.alpinelinux.org/alpine/edge/community
 
 RUN addgroup -S databox && adduser -S -g databox databox
+COPY go.mod go.mod
+COPY go.sum go.sum
+RUN go get ./
 COPY . .
 RUN GGO_ENABLED=0 GOOS=linux go build -a -ldflags '-s -w' -o driver /src/*.go
 

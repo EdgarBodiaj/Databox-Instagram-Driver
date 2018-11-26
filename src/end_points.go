@@ -130,11 +130,13 @@ func login(w http.ResponseWriter, r *http.Request) {
 				libDatabox.Err("Error Write Datasource " + err.Error())
 			}
 
-		} else {
+		} else if k == "password" {
 			err := storeClient.KVText.Write("InstagramCred", "password", []byte(strings.Join(v, "")))
 			if err != nil {
 				libDatabox.Err("Error Write Datasource " + err.Error())
 			}
+		} else {
+			fmt.Println("Finished Storing")
 		}
 
 	}
