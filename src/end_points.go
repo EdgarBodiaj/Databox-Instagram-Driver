@@ -11,11 +11,6 @@ import (
 
 func index(w http.ResponseWriter, r *http.Request) {
 
-	if userAuthenticated {
-		http.Redirect(w, r, Host+"/ui/info", 302)
-		return
-	}
-
 	callbackUrl := r.FormValue("post_auth_callback")
 	PostAuthCallbackUrl := "/core-ui/ui/view/" + BasePath + "/info"
 	if DataboxTestMode {
@@ -23,6 +18,21 @@ func index(w http.ResponseWriter, r *http.Request) {
 	}
 	if callbackUrl != "" {
 		PostAuthCallbackUrl = callbackUrl
+	}
+
+	if userAuthenticated && callbackUrl != "" {
+		//use the callbackUrl if we are logged in and we have one
+		if DataboxTestMode {
+			fmt.Fprintf(w, "<html><head><script>window.location = '%s';</script><head><body><body></html>", PostAuthCallbackUrl)
+		} else {
+			fmt.Fprintf(w, "<html><head><script>window.parent.location = '%s';</script><head><body><body></html>", PostAuthCallbackUrl)
+		}
+		return
+	}
+
+	if userAuthenticated {
+		http.Redirect(w, r, Host+"/ui/info", 302)
+		return
 	}
 
 	body := `<!doctype html>
