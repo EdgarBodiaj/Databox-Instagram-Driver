@@ -32,6 +32,7 @@ var (
 	BasePath             string
 	Host                 string
 	StopDoDriverWork     chan struct{}
+	UpdateDoDriverWork   chan int
 	DataboxTestMode      bool
 )
 
@@ -63,7 +64,8 @@ func main() {
 		userAuthenticated = true
 		if !isRuning {
 			StopDoDriverWork = make(chan struct{})
-			go doDriverWork(StopDoDriverWork)
+			UpdateDoDriverWork = make(chan int)
+			go doDriverWork(StopDoDriverWork, UpdateDoDriverWork)
 		}
 	}
 
@@ -174,7 +176,7 @@ func infoCheck(channel chan<- bool) {
 
 }
 
-func doDriverWork(stop chan struct{}) {
+func doDriverWork(stop chan struct{}, foreceUpdate chan int) {
 
 	libDatabox.Info("starting doDriverWork")
 	isRuning = true
@@ -270,7 +272,9 @@ func doDriverWork(stop chan struct{}) {
 			libDatabox.Info("Stopping data updates stop message received")
 			isRuning = false
 			return
-		case <-time.After(time.Second * 60):
+		case <-foreceUpdate:
+			libDatabox.Info("updating data forced")
+		case <-time.After(time.Minute * 30):
 			libDatabox.Info("updating data after time out")
 		}
 	}

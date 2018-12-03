@@ -27,6 +27,8 @@ func index(w http.ResponseWriter, r *http.Request) {
 		} else {
 			fmt.Fprintf(w, "<html><head><script>window.parent.location = '%s';</script><head><body><body></html>", PostAuthCallbackUrl)
 		}
+		//force the data to update to the UI gets notified
+		UpdateDoDriverWork <- 1
 		return
 	}
 
@@ -157,7 +159,8 @@ func login(w http.ResponseWriter, r *http.Request) {
 		userAuthenticated = true
 		if !isRuning {
 			StopDoDriverWork = make(chan struct{})
-			go doDriverWork(StopDoDriverWork)
+			UpdateDoDriverWork = make(chan int)
+			go doDriverWork(StopDoDriverWork, UpdateDoDriverWork)
 		}
 
 		callbackUrl := r.FormValue("post_auth_callback")
