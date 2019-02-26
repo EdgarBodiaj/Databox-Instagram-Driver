@@ -1,4 +1,4 @@
-IMAGE_NAME=instagram-photo-driver
+IMAGE_NAME=driver-instagram
 DEFAULT_REG=databoxsystems
 VERSION=latest
 
